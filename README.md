@@ -4,7 +4,7 @@
 
 The gender wage gap is a well studied phenomenon in the modern labour market. The core concept revolves around the idea that, on average, female workers receive lower compensation for performing the same job as their male counterparts. In 2018 it was estimated that women earned on average $0.87 for every dollar earned by man. This trend is exacerbated by the fact that female workers are consistently underrepresented in the top earning groups (10%), where there is a 3:1 ration of male to female workers in the first 9%, 5:1 ration in the next 0.9% and about 7:1 ration in the top 0.1% accourding to another study conducted in 2015. We turn towards the Labour Force Survey (LFS) of September 2022 from StatCan to see how prevalent this phenomenon is in 2022. Note that this is a cross sectional study which means it is just a snapshot look of the Canadian labour market. The results are only relevant for September 2022, and should not be extrapolated to other months or years without proper research. We find that after accounting for educational, demographic and work related covariates, we estimate that female workers earn 7% less than their male counterpart. 
 
-The following image is a EDA on the demographic variables of the survey. 
+The following image depicts EDA conducted on the demographic variables of the survey. 
 ![image](https://github.com/AlisaYang07/Gender_Wage_Gap_CA/assets/61921004/5c37dcfa-ce95-4dad-bd19-fd58ec22c302)\
 
 ### Data 
