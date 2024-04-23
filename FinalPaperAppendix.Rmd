@@ -1,0 +1,374 @@
+---
+title: "Final Paper Appendix"
+author: "Alisa Yang"
+date: "2022-12-14"
+
+output:
+  pdf_document: default
+  html_document: default
+fontsize: 12pt
+header-includes:
+    - \linespread{1.25}
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE, 
+  out.width = "100%",
+  fig.width = 3,
+  fig.height = 2, 
+  fig.retina = 3,
+  cache = FALSE)
+```
+
+**Appendix I:**  *Dropping missing values*
+
+After running some histograms, we see that the missing values are around 33% female and the rest male, the sample population has around a 50-50 break down of the population, which suggest that the missing values might not be random. The occupation break down between the the missing wages group seems to be higher within group 1, which are "Management occupations". This isn't too surprising, since surveys tend to sensor things individuals with very high wages. 
+
+The full sample also had higher number of individual within the management occupation, so the sample shouldn't be too skewed after dropping the missing wages. 
+
+There are also a lot of missing data from other variables such as "lkpubag" which stands for "Unemployed, used public employment agency",in our case, these variables aren't applicable for our analysis so we don't need to worry about them.
+
+```{r,fig.width=3,fig.height=3}
+library(data.table)
+data <- data.frame(fread('https://raw.githubusercontent.com/AlisaYang07/TEST_Dataset/main/pub0922.csv'))# 
+employed_data = data[(data$LFSSTAT)==1,] ##Status = Employed(1) 
+na_salary = employed_data[is.na((employed_data$HRLYEARN)),]
+hist(na_salary$SEX,main ="Missing Wages Sex Breakdown")
+hist(na_salary$NOC_10, breaks = 11, main ="Missing Wages Occupation Breakdown")
+hist(employed_data$NOC_10, breaks = 11, main ="Full Sample Occupation Breakdown")
+library(tidyr)
+employed_data = employed_data[!is.na(employed_data$HRLYEARN), ]
+```
+
+**Appendix II:** 
+Histogram of Hourly Wages and Log Hourly Wages.
+```{r,fig.width=3,fig.height=3}
+data <- data.frame(fread('https://raw.githubusercontent.com/AlisaYang07/TEST_Dataset/main/pub0922.csv'))# 
+employed_data = data[(data$LFSSTAT)==1,] ##Status = Employed(1) 
+
+employed_data$log_hrlwages = log(employed_data$HRLYEARN)
+hist(employed_data$HRLYEARN,main ="Histogram of Hourly Wages")
+hist(employed_data$log_hrlwages,main ="Histogram of Log Hourly Wages")
+```
+
+**Appendix III:** 
+Extra Graphs
+```{r fig.height = 6, fig.width = 6}
+library(ggpubr)
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(stringr)
+employed_data = data[(data$LFSSTAT)==1,] ##Status = Employed(1) or Employed on leave(2)
+employed_data$hrlwages <- employed_data$HRLYEARN / 100
+
+
+
+employed_male <- subset(employed_data, SEX == 1)
+employed_female <- subset(employed_data, SEX == 2)
+male_mean = mean(employed_male$hrlwages,na.rm=TRUE)
+female_mean= mean(employed_female$hrlwages,na.rm=TRUE)
+employed_data$labels <- ifelse(employed_data$SEX == 1, "Male", "Female")
+df<- data.frame(employed_data)
+
+
+df=df %>%
+  mutate(NOC_10_occupation = case_when(
+    NOC_10==1	~ "Manage.",
+    NOC_10==2	~ "Business",
+    NOC_10==3	~ "Sciences",
+    NOC_10==4	~ "Health",
+    NOC_10==5	~ "Education and government ",
+    NOC_10==6	~ "Art and sport",
+    NOC_10==7	~ "Sales and service",
+    NOC_10==8	~ "Trades and Construction",
+    NOC_10==9	~ "Natural resources and agriculture",
+    NOC_10==10	~ "Manufac. and Utilities",
+    ))
+df$NOC_10_occupation =str_wrap(df$NOC_10_occupation,width = 6)
+
+
+occupatio_bar_graph <-
+  ggplot(df, mapping = aes(x = NOC_10_occupation)) +
+  geom_bar(aes(color = labels, fill = labels),alpha = 0.4,position = "dodge",size=0.25)+
+  scale_fill_manual(values = c("#bb001c", "#0051bb")) +
+  scale_color_manual(values = c("#bb001c", "#0051bb")) +
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent'),
+         text = element_text(size = 7),
+        # legend.position="bottom"
+        legend.position = "none",
+        plot.title = element_text(size=10),
+        axis.text = element_text(size = 4) 
+       )+
+  ggtitle("Occupation by Sex") +
+  xlab("Occupations NOC 10") + ylab("# of Individuals")
+
+
+
+df=df %>%
+  mutate(EducationLevel = case_when(
+    EDUC==0	~ "0 to 8 years",
+    EDUC==1	~ "Some High School",
+    EDUC==2	~ "High School",
+    EDUC==3	~ "Some postsec.",
+    EDUC==4	~ "Certificat/Diploma",
+    EDUC==5	~ "Bachelor's",
+    EDUC==6	~ "Above",
+    ))
+
+df$EducationLevel =str_wrap(df$EducationLevel,width = 6)
+
+
+educ_bar_graph <-
+  ggplot(df, mapping = aes(x = EducationLevel)) +
+  geom_bar(aes(color = labels, fill = labels),alpha = 0.4,position = "dodge",size=0.25)+
+  scale_fill_manual(values = c("#bb001c", "#0051bb")) +
+  scale_color_manual(values = c("#bb001c", "#0051bb")) +
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent'),
+         text = element_text(size = 7),
+        # legend.position="bottom"
+        legend.position = "none",
+        plot.title = element_text(size=10),
+        axis.text = element_text(size = 4) 
+       )+
+  ggtitle("Education Attainment by Sex") +
+  xlab("Years of Education") + ylab("# of Individuals")
+
+df=df %>%
+  mutate(AgeGroup = case_when(
+    AGE_12==1	~ "15-19",
+    AGE_12==2	~ "20-24",
+    AGE_12==3	~ "25-29",
+    AGE_12==4	~ "30-34",
+    AGE_12==5	~ "35-39",
+    AGE_12==6	~ "40-44",
+    AGE_12==7	~ "45-49",
+    AGE_12==8	~ "50-54",
+    AGE_12==9	~ "55-59",
+    AGE_12==10	~ "60-64",
+    AGE_12==11	~ "65-69",
+    AGE_12==12	~ "70+",
+    ))
+df$AgeGroup=str_wrap(df$AgeGroup,width = 6)
+
+age_graph <-
+ ggplot(df, mapping = aes(x = AgeGroup)) +
+  geom_bar(aes(color = labels, fill = labels),alpha = 0.4,position = "dodge",size=0.25)+
+  scale_fill_manual(values = c("#bb001c", "#0051bb")) +
+  scale_color_manual(values = c("#bb001c", "#0051bb")) +
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent'),
+         text = element_text(size = 7),
+        # legend.position="bottom"
+        legend.position = "none",
+        plot.title = element_text(size=10),
+        axis.text = element_text(size = 4) 
+       )+
+
+  ggtitle("Age Group by Sex") +
+  xlab("Age Group") + ylab("# of Individuals")
+
+df=df %>%
+  mutate(ImmigrationStatus = case_when(
+    IMMIG==1	~ "<10 years",
+    IMMIG==2	~ ">10 years",
+    IMMIG==3	~ "Non-Immigrant",
+    ))
+
+imm<-
+ ggplot(df, mapping = aes(x = ImmigrationStatus)) +
+  geom_bar(aes(color = labels, fill = labels),alpha = 0.4,position = "dodge",size=0.25)+
+  scale_fill_manual(values = c("#bb001c", "#0051bb")) +
+  scale_color_manual(values = c("#bb001c", "#0051bb")) +
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent'),
+         text = element_text(size = 7),
+        # legend.position="bottom"
+        legend.position = "none",
+        plot.title = element_text(size=10),
+        axis.text = element_text(size = 4) 
+       )+
+  ggtitle("Immigration Status by Sex") +
+  xlab("Immigration Status") + ylab("# of Individuals")
+
+df=df %>%
+  mutate(Class_of_Worker = case_when(
+    COWMAIN==1	~ "Public Sector",
+    COWMAIN==2	~ "Private Sector",
+    COWMAIN==3	~ "Self-Employed Inc.+PaidHelp",
+    COWMAIN==4	~ "Self-Employed Inc.+NoPaidHelp",
+    COWMAIN==5	~ "Self-Employed UnInc.+PaidHelp",
+    COWMAIN==6	~ "Self-Employed UnInc.+NoPaidHelp",
+    COWMAIN==7	~ "Unpaid Family Worker",
+    ))
+
+df$Class_of_Worker=str_wrap(df$Class_of_Worker,width = 6)
+
+
+
+class_workers<- ggplot(df, mapping = aes(x = Class_of_Worker)) +
+  geom_bar(aes(color = labels, fill = labels),alpha = 0.4,position = "dodge",size=0.25)+
+  scale_fill_manual(values = c("#bb001c", "#0051bb")) +
+  scale_color_manual(values = c("#bb001c", "#0051bb")) +
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent'),
+         text = element_text(size = 7),
+        # legend.position="bottom"
+        legend.position = "none",
+        plot.title = element_text(size=10),
+        axis.text = element_text(size = 4) 
+       )+
+  ggtitle("Class of Worker by Sex") +
+  xlab("Worker Class") + ylab("# of Individuals")
+
+
+
+df=df %>%
+  mutate(Marital_Status = case_when(
+    MARSTAT==1	~ "Married",
+    MARSTAT==2	~ "Common-Law",
+    MARSTAT==3	~ "Widowed",
+    MARSTAT==4	~ "Separated",
+    MARSTAT==5	~ "Divorced",
+    MARSTAT==6	~ "Single",
+    ))
+
+marital_status <-ggplot(df, mapping = aes(x = Marital_Status)) +
+  geom_bar(aes(color = labels, fill = labels),alpha = 0.4,position = "dodge",size=0.25)+
+  scale_fill_manual(values = c("#bb001c", "#0051bb")) +
+  scale_color_manual(values = c("#bb001c", "#0051bb")) +
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent'),
+         text = element_text(size = 7),
+        # legend.position="bottom"
+        legend.position = "none",
+        plot.title = element_text(size=10),
+        axis.text = element_text(size = 4) 
+       )+
+  ggtitle("Marital Status by Sex") +
+  xlab("Marital Status") + ylab("# of Individuals")
+
+
+
+ggarrange(occupatio_bar_graph,
+          educ_bar_graph, age_graph,imm,marital_status,
+          labels = c("A", "B","C","D","E","F"),
+          ncol = 2, nrow = 3)
+
+```
+
+```{r}
+# step_fit = lm(formula = HRLYEARN ~ as.factor(SEX) + as.factor(PROV) + as.factor(AGE_12) + 
+#   as.factor(EDUC) + as.factor(MJH) + as.factor(COWMAIN) + as.factor(IMMIG) + 
+#   as.factor(NAICS_21) + as.factor(NOC_40) + TENURE + as.factor(UNION) + 
+#   as.factor(PERMTEMP) + as.factor(ESTSIZE) + as.factor(FIRMSIZE) + 
+#   as.factor(SCHOOLN) + as.factor(EFAMTYPE) + as.factor(AGYOWNK)+as.factor(MARSTAT)
+#   +as.factor(UNPAIDOT) + as.factor(PAIDOT) +as.factor(UTOTHRS) + as.factor(ATOTHRS),
+#   data = employed_data)
+# step_lm<-step(step_fit,direction="backward")
+# summary(step_lm)
+
+```
+
+**Appendix IV** - *Dropping "SCHOOLN" and "AGYOWNK"*
+After dropping all of the missing (NAs) for the response variable, I had some missing values in the variables for "Age of youngest child" as well "current student status", if I included them, it would drop many of my other observations. We see that they aren't very relevant (thought they are statistically significant) after we account for age. 
+
+
+```{r}
+library(data.table)
+library(car)
+data <- data.frame(fread('https://raw.githubusercontent.com/AlisaYang07/TEST_Dataset/main/pub0922.csv'))# 
+
+employed_data = data[(data$LFSSTAT)==1,] ##Status = Employed(1) or Employed on leave(2)
+
+keep<- c("PROV","HRLYEARN","SEX", "AGE_12","MARSTAT","EDUC","MJH","COWMAIN","IMMIG","NAICS_21","UTOTHRS","ATOTHRS","PAIDOT","UNPAIDOT", "NOC_40","NOC_10","TENURE","UNION","PERMTEMP", "ESTSIZE","FIRMSIZE","SCHOOLN","EFAMTYPE","AGYOWNK")
+employed_data$hrlwages <- employed_data$HRLYEARN / 100
+employed_data = employed_data[,(names(employed_data ) %in% keep)]
+employed_data = employed_data[!is.na(employed_data$HRLYEARN),]
+
+employed_data$log_hrlwages = log(employed_data$HRLYEARN)
+
+model =lm(log_hrlwages~as.factor(SEX)+as.factor(PROV)+as.factor(AGE_12)+as.factor(MARSTAT)+as.factor(EFAMTYPE)+as.factor(IMMIG) +as.factor(EDUC)+ as.factor(NOC_40)+as.factor(NAICS_21)+TENURE+ UTOTHRS+ATOTHRS+PAIDOT+UNPAIDOT+as.factor(UNION)+ as.factor(PERMTEMP) + as.factor(ESTSIZE) +as.factor(MJH)+as.factor(COWMAIN) +as.factor(FIRMSIZE)  + as.factor(AGYOWNK) + as.factor(SCHOOLN),data=employed_data)
+
+Anova(model,type="III")
+```
+
+**Appendix V:**
+
+Data for the main anovas and coefficients from the main table in the paper. I didn't include them in the actual one since it will be too big. 
+```{r}
+
+library(data.table)
+library(car)
+data <- data.frame(fread('https://raw.githubusercontent.com/AlisaYang07/TEST_Dataset/main/pub0922.csv'))# 
+employed_data = data[(data$LFSSTAT)==1,] ##Status = Employed(1) or Employed on leave(2)
+keep<- c("PROV","HRLYEARN","SEX", "AGE_12","MARSTAT","EDUC","MJH","COWMAIN","IMMIG","NAICS_21","UTOTHRS","ATOTHRS","PAIDOT","UNPAIDOT", "NOC_40","NOC_10","TENURE","UNION","PERMTEMP", "ESTSIZE","FIRMSIZE","EFAMTYPE")
+
+employed_data = employed_data[,(names(employed_data ) %in% keep)]
+employed_data = employed_data[!is.na(employed_data$HRLYEARN),]
+
+data <- data.frame(fread('https://raw.githubusercontent.com/AlisaYang07/TEST_Dataset/main/pub0922.csv'))# 
+
+employed_data = data[(data$LFSSTAT)==1,] ##Status = Employed(1) or Employed on leave(2)
+employed_data$hrlwages <- employed_data$HRLYEARN / 100
+employed_data$log_hrlwages <- log(employed_data$hrlwages)
+
+fit_vanilla = lm(log_hrlwages~as.factor(SEX),data=employed_data)
+
+fit_demographic =lm(log_hrlwages~as.factor(SEX)+as.factor(PROV)+as.factor(AGE_12)+as.factor(MARSTAT)+as.factor(EFAMTYPE)+as.factor(IMMIG)
+                    ,data=employed_data)
+
+
+fit_education =lm(log_hrlwages~as.factor(SEX)+as.factor(PROV)+as.factor(AGE_12)+as.factor(MARSTAT)+as.factor(EFAMTYPE)+as.factor(IMMIG) +as.factor(EDUC) ,data=employed_data)
+
+full =lm(log_hrlwages~as.factor(SEX)+as.factor(PROV)+as.factor(AGE_12)+as.factor(MARSTAT)+as.factor(EFAMTYPE)+as.factor(IMMIG) +as.factor(EDUC)+ as.factor(NOC_40)+as.factor(NAICS_21)+TENURE+ UTOTHRS+ATOTHRS+PAIDOT+UNPAIDOT+as.factor(UNION)+ as.factor(PERMTEMP) + as.factor(ESTSIZE) +as.factor(MJH)+as.factor(COWMAIN) +as.factor(FIRMSIZE),data=employed_data)
+
+summary(fit_vanilla)
+summary(fit_demographic)
+summary(fit_education)
+summary(full)
+Anova(fit_vanilla,type="III")
+Anova(fit_demographic,type="III")
+Anova(fit_education,type="III")
+Anova(full,type="III")
+
+
+```
+
